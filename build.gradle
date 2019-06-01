@@ -1,0 +1,78 @@
+buildscript {
+	repositories {
+		maven {
+			url "http://artifactory.infin-it.kz/artifactory/global"
+		}
+		
+		dependencies {
+			classpath('org.jfrog.buildinfo:build-info-extractor-gradle:3.1.2')
+		}
+	}
+}
+apply plugin: 'groovy'
+apply plugin: 'java'
+
+group = 'org.test'
+version = '1.0'
+
+ext {
+	groovyVersion = '2.4.4'
+	sparkVersion = '2.8.0'
+	sparkAuthVersion = '1.4'
+	oracleVersion = '11.2.0.3'
+	log4jVersion = '2.11.0'
+	slf4jVersion = '1.7.25'
+	okhttpVersion = '3.14.1'
+	gparsVersion = '1.2.0'
+	guavaVersion = "27.1-jre"
+	commonsVersion = "2.6"
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+	maven {
+		url "http://artifactory.infin-it.kz/artifactory/global"
+	}
+}
+
+sourceSets.main.groovy {
+	srcDirs = ['src/main/groovy']
+}
+
+dependencies {
+	compile "org.codehaus.groovy:groovy-all:$groovyVersion"
+	compile "com.sparkjava:spark-core:$sparkVersion"
+	compile "com.squareup.okhttp3:okhttp:$okhttpVersion"
+	compile "org.codehaus.gpars:gpars:$gparsVersion"
+	compile "com.google.guava:guava:$guavaVersion"
+	compile "commons-io:commons-io:$commonsVersion"
+
+	compile "org.apache.logging.log4j:log4j-api:$log4jVersion"
+	compile "org.apache.logging.log4j:log4j-core:$log4jVersion"
+	compile "org.apache.logging.log4j:log4j-web:$log4jVersion"
+	compile "org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion"
+
+	compile "org.slf4j:jul-to-slf4j:$slf4jVersion"
+	compile "org.slf4j:jcl-over-slf4j:$slf4jVersion"
+	compile "org.slf4j:log4j-over-slf4j:$slf4jVersion"
+}
+
+task uberJar(type: Jar, dependsOn:[':compileJava',':compileGroovy']) {
+	from files(sourceSets.main.output)
+    from files(sourceSets.main.output.resourcesDir)
+    from(configurations.runtime.asFileTree.files.collect { zipTree(it) }) {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    }
+    manifest {
+        attributes 'Implementation-Title': 'DB ci helper',
+                'Implementation-Version': version,
+                'Built-By': System.getProperty('user.name'),
+                'Built-Date': new Date(),
+                'Built-JDK': System.getProperty('java.version'),
+                'Main-Class': 'org.test.Main'
+    }
+}
